@@ -6,6 +6,7 @@ services:
     ports:
       - "80:80"      # HTTP
       - "443:443"    # HTTPS
+      - "127.0.0.1:8080:8080"  # Traefik API (только localhost)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./docker/traefik/traefik.toml:/traefik.toml:ro
@@ -36,7 +37,7 @@ services:
       - "traefik.frontend.rule=Host:app.notfully.ru"
       - "traefik.port=80"
       - "traefik.docker.network=web"
-      - "traefik.frontend.redirect.entryPoint=https"
+      - "traefik.frontend.entryPoints=http,https"
 
   backend:
     build:
@@ -67,7 +68,7 @@ services:
       - "traefik.frontend.rule=Host:backend.notfully.ru"
       - "traefik.port=8000"
       - "traefik.docker.network=web"
-      - "traefik.frontend.redirect.entryPoint=https"
+      - "traefik.frontend.entryPoints=http,https"
       # WebSocket support
       - "traefik.frontend.headers.customRequestHeaders=Upgrade:websocket||Connection:Upgrade"
 

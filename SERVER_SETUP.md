@@ -58,10 +58,11 @@ TRAEFIK_ADMIN_EMAIL=ваш_email@example.com
 ## Продолжение установки:
 
 ```bash
-# 4. Обновить TURN конфигурацию
-sed -i "s/listening-ip=127.0.0.1/listening-ip=0.0.0.0/" docker/coturn/turnserver.conf
-sed -i "s/external-ip=localhost/external-ip=$(curl -s ifconfig.me)/" docker/coturn/turnserver.conf
-sed -i "s/realm=localhost/realm=notfully.ru/" docker/coturn/turnserver.conf
+# 4. Обновить TURN конфигурацию (автоматически)
+SERVER_PUBLIC_IP=$(curl -s ifconfig.me)
+sed -i "s/external-ip=YOUR_PUBLIC_IP/external-ip=$SERVER_PUBLIC_IP/" docker/coturn/turnserver.conf
+
+echo "TURN сервер настроен с IP: $SERVER_PUBLIC_IP"
 
 # 5. Создать acme.json для SSL
 touch docker/traefik/acme.json

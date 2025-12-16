@@ -74,6 +74,8 @@ services:
     image: postgres:16-alpine
     container_name: telegram_calls_postgres
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"  # PostgreSQL (только localhost)
     environment:
       - POSTGRES_USER=telegram_calls
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-telegram_calls_pass}

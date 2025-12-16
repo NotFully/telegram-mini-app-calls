@@ -57,7 +57,7 @@ class SignalingHandler:
         """Handle user joining a room"""
         room_id_str = message.get("room_id")
         if not room_id_str:
-            logger.warning(f"Missing room_id in join-room from user {user_id}")
+            logger.warning(f"Missing room_id in join-room from user {user_id}. Message: {message}")
             return
 
         try:

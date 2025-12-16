@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.websocket import ConnectionManager, SignalingHandler
 from ...core.logger import get_logger
 from ...core.dependencies import get_db_session
-from ...infrastructure.database.repositories import UserRepository
+from ...infrastructure.database.repositories import UserRepositoryImpl
 
 logger = get_logger(__name__)
 
@@ -32,7 +32,7 @@ async def websocket_endpoint(
     - leave-room: Leave a call room
     """
     # Update user status to online in database
-    user_repo = UserRepository(db)
+    user_repo = UserRepositoryImpl(db)
     try:
         await user_repo.update_online_status(user_id, True)
         await db.commit()

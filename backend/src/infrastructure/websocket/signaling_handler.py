@@ -99,6 +99,7 @@ class SignalingHandler:
         """Handle WebRTC offer"""
         target_user_id = message.get("target_user_id")
         sdp = message.get("sdp")
+        room_id = message.get("room_id")
 
         if not target_user_id or not sdp:
             logger.warning(f"Missing target_user_id or sdp in offer from user {user_id}")
@@ -108,6 +109,7 @@ class SignalingHandler:
             {
                 "type": "offer",
                 "from_user_id": user_id,
+                "room_id": room_id,
                 "sdp": sdp
             },
             target_user_id

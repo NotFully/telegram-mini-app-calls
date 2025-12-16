@@ -17,14 +17,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleIncomingCall = (message: any) => {
       // Handle incoming offer (incoming call)
       if (message.type === 'offer') {
-        const { from_user_id } = message
+        const { from_user_id, room_id } = message
 
         // Only handle if not already on call page
         if (location.pathname !== '/call') {
-          console.log('Incoming call from user', from_user_id)
+          console.log('Incoming call from user', from_user_id, 'room', room_id)
 
           // Set call state to incoming
           useCallStore.getState().setRemoteUserId(from_user_id)
+          useCallStore.getState().setRoomId(room_id || null)
           useCallStore.getState().setIsIncoming(true)
           useCallStore.getState().setStatus('connecting')
 

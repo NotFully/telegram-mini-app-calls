@@ -69,8 +69,6 @@ services:
       - "traefik.port=8000"
       - "traefik.docker.network=web"
       - "traefik.frontend.entryPoints=http,https"
-      # WebSocket support
-      - "traefik.frontend.headers.customRequestHeaders=Upgrade:websocket||Connection:Upgrade"
 
   postgres:
     image: postgres:16-alpine

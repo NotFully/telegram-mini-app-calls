@@ -14,8 +14,19 @@ import { mediaStreamManager } from '@/shared/lib/webrtc/media-stream'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
-  const { status, duration, roomId, remoteUserId, peerConnection } = useCallStore()
+  const { status, duration, roomId, remoteUserId, peerConnection, isIncoming } = useCallStore()
   const durationIntervalRef = useRef<number>()
+
+  // Join room for incoming calls
+  useEffect(() => {
+    if (isIncoming && roomId) {
+      console.log('Joining room for incoming call:', roomId)
+      wsClient.send({
+        type: 'join-room',
+        room_id: roomId,
+      })
+    }
+  }, [isIncoming, roomId])
 
   // Handle WebSocket messages
   useEffect(() => {

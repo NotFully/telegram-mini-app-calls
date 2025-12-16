@@ -16,6 +16,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/telegram", response_model=TelegramAuthResponse, status_code=status.HTTP_200_OK)
 async def telegram_auth(
     request: TelegramAuthRequest,
+    use_case: CreateUserUseCase = Depends(get_create_user_use_case),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -30,7 +31,6 @@ async def telegram_auth(
         #         raise HTTPException(status_code=401, detail="Invalid Telegram init data")
 
         # Create or get user
-        use_case = await get_create_user_use_case(session)
         dto = CreateUserDTO(
             telegram_id=request.telegram_id,
             username=request.username,

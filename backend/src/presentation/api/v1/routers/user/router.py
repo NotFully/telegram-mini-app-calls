@@ -19,11 +19,10 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.get("/online", response_model=UserListResponse)
 async def list_online_users(
-    session: AsyncSession = Depends(get_db_session)
+    use_case: ListOnlineUsersUseCase = Depends(get_list_online_users_use_case)
 ):
     """Get list of all online users"""
     try:
-        use_case = await get_list_online_users_use_case(session)
         users = await use_case.execute()
 
         return UserListResponse(
@@ -53,11 +52,10 @@ async def list_online_users(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int = Path(..., gt=0),
-    session: AsyncSession = Depends(get_db_session)
+    use_case: GetUserUseCase = Depends(get_get_user_use_case)
 ):
     """Get user by ID"""
     try:
-        use_case = await get_get_user_use_case(session)
         user = await use_case.execute_by_id(user_id)
 
         return UserResponse(

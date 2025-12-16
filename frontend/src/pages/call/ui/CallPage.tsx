@@ -26,7 +26,6 @@ export const CallPage: React.FC = () => {
             // Handle incoming offer
             await peerConnection.setRemoteDescription(message.sdp)
             const answer = await peerConnection.createAnswer()
-            await peerConnection.setLocalDescription(answer)
 
             wsClient.send({
               type: 'answer',

@@ -1,0 +1,82 @@
+# Traefik 1.7 Configuration
+
+################################################################
+# Global configuration
+################################################################
+[global]
+  checkNewVersion = true
+  sendAnonymousUsage = false
+
+################################################################
+# Entrypoints configuration
+################################################################
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+    [entryPoints.http.redirect]
+      entryPoint = "https"
+
+  [entryPoints.https]
+    address = ":443"
+    [entryPoints.https.tls]
+
+################################################################
+# Traefik logs configuration
+################################################################
+[traefikLog]
+  filePath = "/var/log/traefik/traefik.log"
+  format = "json"
+
+################################################################
+# Access logs configuration
+################################################################
+[accessLog]
+  filePath = "/var/log/traefik/access.log"
+  format = "json"
+
+################################################################
+# API and dashboard configuration
+################################################################
+[api]
+  entryPoint = "traefik"
+  dashboard = true
+  address = ":8080"
+
+################################################################
+# Docker configuration backend
+################################################################
+[docker]
+  endpoint = "unix:///var/run/docker.sock"
+  domain = "notfully.ru"
+  watch = true
+  exposedByDefault = false
+  network = "web"
+
+################################################################
+# Let's Encrypt configuration
+################################################################
+[acme]
+  email = "admin@notfully.ru"
+  storage = "/acme.json"
+  entryPoint = "https"
+  onHostRule = true
+
+  # Use HTTP-01 challenge
+  [acme.httpChallenge]
+    entryPoint = "http"
+
+  # Staging server for testing (comment out for production)
+  # caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+  # Production Let's Encrypt
+  caServer = "https://acme-v02.api.letsencrypt.org/directory"
+
+  # Domain list
+  [[acme.domains]]
+    main = "app.notfully.ru"
+
+  [[acme.domains]]
+    main = "backend.notfully.ru"
+
+  [[acme.domains]]
+    main = "traefik.notfully.ru"

@@ -1,0 +1,124 @@
+services:
+  traefik:
+    image: traefik:1.7-alpine
+    container_name: telegram_calls_traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik/traefik.toml:/traefik.toml:ro
+      - ./docker/traefik/acme.json:/acme.json
+    networks:
+      - telegram_calls_network
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:traefik.notfully.ru"
+      - "traefik.port=8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.prod.Dockerfile
+      args:
+        - VITE_API_URL=https://backend.notfully.ru
+        - VITE_WS_URL=wss://backend.notfully.ru
+        - VITE_TELEGRAM_BOT_NAME=${VITE_TELEGRAM_BOT_NAME}
+    container_name: telegram_calls_frontend
+    restart: unless-stopped
+    networks:
+      - telegram_calls_network
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:app.notfully.ru"
+      - "traefik.port=80"
+      - "traefik.docker.network=web"
+      - "traefik.frontend.redirect.entryPoint=https"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: telegram_calls_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://telegram_calls:telegram_calls_pass@postgres:5432/telegram_calls
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TURN_URLS=["turn:${SERVER_IP}:3478"]
+      - STUN_URLS=["stun:stun.l.google.com:19302"]
+      - TURN_USERNAME=telegram_calls
+      - TURN_PASSWORD=telegram_calls_turn
+      - DEBUG=false
+      - ALLOWED_ORIGINS=["https://app.notfully.ru","https://notfully.ru"]
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    networks:
+      - telegram_calls_network
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:backend.notfully.ru"
+      - "traefik.port=8000"
+      - "traefik.docker.network=web"
+      - "traefik.frontend.redirect.entryPoint=https"
+      # WebSocket support
+      - "traefik.frontend.headers.customRequestHeaders=Upgrade:websocket||Connection:Upgrade"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: telegram_calls_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=telegram_calls
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-telegram_calls_pass}
+      - POSTGRES_DB=telegram_calls
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - telegram_calls_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telegram_calls"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: telegram_calls_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - telegram_calls_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: telegram_calls_coturn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./docker/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  telegram_calls_network:
+    driver: bridge
+  web:
+    external: true

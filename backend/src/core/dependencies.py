@@ -1,155 +1,106 @@
 """Dependency injection for FastAPI"""
 from typing import AsyncGenerator
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..infrastructure.database import get_session, UserRepositoryImpl, RoomRepositoryImpl
-from ..application.use_cases.user import (
-    CreateUserUseCase,
-    GetUserUseCase,
-    ListOnlineUsersUseCase,
-)
-from ..application.use_cases.room import (
-    CreateRoomUseCase,
-    JoinRoomUseCase,
-    LeaveRoomUseCase,
-    GetRoomInfoUseCase,
-    ListActiveRoomsUseCase,
-)
+
+from ..infrastructure.database.base import get_db
+from ..infrastructure.database.repositories.user_repository_impl import UserRepositoryImpl
+from ..infrastructure.database.repositories.room_repository_impl import RoomRepositoryImpl
+from ..application.use_cases.user.create_user import CreateUserUseCase
+from ..application.use_cases.user.get_user import GetUserUseCase
+from ..application.use_cases.user.list_online_users import ListOnlineUsersUseCase
+from ..application.use_cases.room.create_room import CreateRoomUseCase
+from ..application.use_cases.room.get_room_info import GetRoomInfoUseCase
+from ..application.use_cases.room.list_active_rooms import ListActiveRoomsUseCase
+from ..application.use_cases.room.join_room import JoinRoomUseCase
+from ..application.use_cases.room.leave_room import LeaveRoomUseCase
 
 
 # Database session dependency
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Get database session"""
-    async for session in get_session():
+    async for session in get_db():
         yield session
 
 
 # User dependencies
 async def get_user_repository(
-    session: AsyncSession = None
-) -> UserRepositoryImpl:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[UserRepositoryImpl, None]:
     """Get user repository instance"""
-    if session is None:
-        async for session in get_db_session():
-            yield UserRepositoryImpl(session)
-    else:
-        return UserRepositoryImpl(session)
+    yield UserRepositoryImpl(session)
 
 
 async def get_create_user_use_case(
-    session: AsyncSession = None
-) -> CreateUserUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[CreateUserUseCase, None]:
     """Get CreateUser use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            user_repo = UserRepositoryImpl(session)
-            yield CreateUserUseCase(user_repo)
-    else:
-        user_repo = UserRepositoryImpl(session)
-        return CreateUserUseCase(user_repo)
+    user_repo = UserRepositoryImpl(session)
+    yield CreateUserUseCase(user_repo)
 
 
 async def get_get_user_use_case(
-    session: AsyncSession = None
-) -> GetUserUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[GetUserUseCase, None]:
     """Get GetUser use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            user_repo = UserRepositoryImpl(session)
-            yield GetUserUseCase(user_repo)
-    else:
-        user_repo = UserRepositoryImpl(session)
-        return GetUserUseCase(user_repo)
+    user_repo = UserRepositoryImpl(session)
+    yield GetUserUseCase(user_repo)
 
 
 async def get_list_online_users_use_case(
-    session: AsyncSession = None
-) -> ListOnlineUsersUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[ListOnlineUsersUseCase, None]:
     """Get ListOnlineUsers use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            user_repo = UserRepositoryImpl(session)
-            yield ListOnlineUsersUseCase(user_repo)
-    else:
-        user_repo = UserRepositoryImpl(session)
-        return ListOnlineUsersUseCase(user_repo)
+    user_repo = UserRepositoryImpl(session)
+    yield ListOnlineUsersUseCase(user_repo)
 
 
 # Room dependencies
 async def get_room_repository(
-    session: AsyncSession = None
-) -> RoomRepositoryImpl:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[RoomRepositoryImpl, None]:
     """Get room repository instance"""
-    if session is None:
-        async for session in get_db_session():
-            yield RoomRepositoryImpl(session)
-    else:
-        return RoomRepositoryImpl(session)
+    yield RoomRepositoryImpl(session)
 
 
 async def get_create_room_use_case(
-    session: AsyncSession = None
-) -> CreateRoomUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[CreateRoomUseCase, None]:
     """Get CreateRoom use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            user_repo = UserRepositoryImpl(session)
-            room_repo = RoomRepositoryImpl(session)
-            yield CreateRoomUseCase(room_repo, user_repo)
-    else:
-        user_repo = UserRepositoryImpl(session)
-        room_repo = RoomRepositoryImpl(session)
-        return CreateRoomUseCase(room_repo, user_repo)
-
-
-async def get_join_room_use_case(
-    session: AsyncSession = None
-) -> JoinRoomUseCase:
-    """Get JoinRoom use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            user_repo = UserRepositoryImpl(session)
-            room_repo = RoomRepositoryImpl(session)
-            yield JoinRoomUseCase(room_repo, user_repo)
-    else:
-        user_repo = UserRepositoryImpl(session)
-        room_repo = RoomRepositoryImpl(session)
-        return JoinRoomUseCase(room_repo, user_repo)
-
-
-async def get_leave_room_use_case(
-    session: AsyncSession = None
-) -> LeaveRoomUseCase:
-    """Get LeaveRoom use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            room_repo = RoomRepositoryImpl(session)
-            yield LeaveRoomUseCase(room_repo)
-    else:
-        room_repo = RoomRepositoryImpl(session)
-        return LeaveRoomUseCase(room_repo)
+    room_repo = RoomRepositoryImpl(session)
+    user_repo = UserRepositoryImpl(session)
+    yield CreateRoomUseCase(room_repo, user_repo)
 
 
 async def get_get_room_info_use_case(
-    session: AsyncSession = None
-) -> GetRoomInfoUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[GetRoomInfoUseCase, None]:
     """Get GetRoomInfo use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            room_repo = RoomRepositoryImpl(session)
-            yield GetRoomInfoUseCase(room_repo)
-    else:
-        room_repo = RoomRepositoryImpl(session)
-        return GetRoomInfoUseCase(room_repo)
+    room_repo = RoomRepositoryImpl(session)
+    yield GetRoomInfoUseCase(room_repo)
 
 
 async def get_list_active_rooms_use_case(
-    session: AsyncSession = None
-) -> ListActiveRoomsUseCase:
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[ListActiveRoomsUseCase, None]:
     """Get ListActiveRooms use case instance"""
-    if session is None:
-        async for session in get_db_session():
-            room_repo = RoomRepositoryImpl(session)
-            yield ListActiveRoomsUseCase(room_repo)
-    else:
-        room_repo = RoomRepositoryImpl(session)
-        return ListActiveRoomsUseCase(room_repo)
+    room_repo = RoomRepositoryImpl(session)
+    yield ListActiveRoomsUseCase(room_repo)
+
+
+async def get_join_room_use_case(
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[JoinRoomUseCase, None]:
+    """Get JoinRoom use case instance"""
+    room_repo = RoomRepositoryImpl(session)
+    user_repo = UserRepositoryImpl(session)
+    yield JoinRoomUseCase(room_repo, user_repo)
+
+
+async def get_leave_room_use_case(
+    session: AsyncSession = Depends(get_db_session)
+) -> AsyncGenerator[LeaveRoomUseCase, None]:
+    """Get LeaveRoom use case instance"""
+    room_repo = RoomRepositoryImpl(session)
+    user_repo = UserRepositoryImpl(session)
+    yield LeaveRoomUseCase(room_repo, user_repo)

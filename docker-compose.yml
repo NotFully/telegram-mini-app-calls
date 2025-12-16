@@ -35,9 +35,9 @@ services:
       - TURN_USERNAME=telegram_calls
       - TURN_PASSWORD=telegram_calls_turn
       - DEBUG=true
-    volumes:
-      - ./backend:/app
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    # volumes:
+    #   - ./backend:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
     networks:
       - telegram_calls_network
 
@@ -62,7 +62,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes

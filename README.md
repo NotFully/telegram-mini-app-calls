@@ -84,7 +84,7 @@ make logs
 - **Frontend**: http://localhost
 - **Backend API**: http://localhost:8000
 - **Backend API Docs**: http://localhost:8000/docs
-- **PostgreSQL**: localhost:5432
+- **PostgreSQL**: localhost:5433 (внутри Docker: postgres:5432)
 - **Redis**: localhost:6379
 
 ### Makefile команды

@@ -3,6 +3,7 @@
  */
 
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useStartCall } from '../model/useStartCall'
 import { useUserStore } from '@/entities/user/model'
 
@@ -17,6 +18,7 @@ export const StartCallButton: React.FC<StartCallButtonProps> = ({
   targetUserName,
   className = '',
 }) => {
+  const navigate = useNavigate()
   const { startCall, isLoading } = useStartCall()
   const currentUser = useUserStore((state) => state.currentUser)
 
@@ -28,6 +30,8 @@ export const StartCallButton: React.FC<StartCallButtonProps> = ({
 
     try {
       await startCall(targetUserId, currentUser.id)
+      // Navigate to call page after starting call
+      navigate('/call')
     } catch (error) {
       console.error('Failed to start call:', error)
     }

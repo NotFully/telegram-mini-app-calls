@@ -12,6 +12,7 @@ const initialState = {
   localStream: null,
   remoteStream: null,
   peerConnection: null,
+  pendingOffer: null,
   isAudioEnabled: true,
   isVideoEnabled: true,
   isIncoming: false,
@@ -34,6 +35,8 @@ export const useCallStore = create<CallStore>((set) => ({
   setRemoteStream: (stream) => set({ remoteStream: stream }),
 
   setPeerConnection: (peerConnection) => set({ peerConnection }),
+
+  setPendingOffer: (offer) => set({ pendingOffer: offer }),
 
   setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
 

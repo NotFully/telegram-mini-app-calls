@@ -14,19 +14,86 @@ import { mediaStreamManager } from '@/shared/lib/webrtc/media-stream'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
-  const { status, duration, roomId, remoteUserId, peerConnection, isIncoming } = useCallStore()
+  const { status, duration, roomId, remoteUserId, peerConnection, isIncoming, pendingOffer } = useCallStore()
   const durationIntervalRef = useRef<number>()
+  const hasProcessedOffer = useRef(false)
 
   // Join room for incoming calls
   useEffect(() => {
     if (isIncoming && roomId) {
-      console.log('Joining room for incoming call:', roomId)
+      console.log('[CallPage] Joining room for incoming call:', roomId)
       wsClient.send({
         type: 'join-room',
         room_id: roomId,
       })
     }
   }, [isIncoming, roomId])
+
+  // Process pending offer for incoming calls
+  useEffect(() => {
+    const processPendingOffer = async () => {
+      if (pendingOffer && isIncoming && !hasProcessedOffer.current) {
+        hasProcessedOffer.current = true
+        console.log('[CallPage] Processing pending offer from user', pendingOffer.from_user_id)
+
+        try {
+          // Get user media
+          console.log('[CallPage] Requesting user media')
+          const localStream = await mediaStreamManager.getUserMedia()
+          useCallStore.getState().setLocalStream(localStream)
+          console.log('[CallPage] Local stream obtained')
+
+          // Create peer connection
+          console.log('[CallPage] Creating peer connection')
+          const pc = new PeerConnection(useCallStore.getState().iceServers)
+          pc.create()
+          pc.addStream(localStream)
+          useCallStore.getState().setPeerConnection(pc)
+
+          // Set up ICE candidate handler
+          pc.onIceCandidate((candidate) => {
+            console.log('[CallPage] Sending ICE candidate to user', pendingOffer.from_user_id)
+            wsClient.send({
+              type: 'ice-candidate',
+              room_id: roomId ?? undefined,
+              target_user_id: pendingOffer.from_user_id,
+              candidate: candidate.toJSON(),
+            })
+          })
+
+          // Set up remote track handler
+          pc.onTrack((event) => {
+            console.log('[CallPage] Remote track received')
+            const [remoteStream] = event.streams
+            useCallStore.getState().setRemoteStream(remoteStream)
+            useCallStore.getState().setStatus('connected')
+          })
+
+          // Set remote description and create answer
+          console.log('[CallPage] Setting remote description')
+          await pc.setRemoteDescription(pendingOffer.sdp)
+          console.log('[CallPage] Creating answer')
+          const answer = await pc.createAnswer()
+
+          console.log('[CallPage] Sending answer to user', pendingOffer.from_user_id)
+          wsClient.send({
+            type: 'answer',
+            room_id: roomId ?? undefined,
+            target_user_id: pendingOffer.from_user_id,
+            sdp: answer,
+          })
+
+          // Clear pending offer
+          useCallStore.getState().setPendingOffer(null)
+        } catch (error) {
+          console.error('[CallPage] Error processing pending offer:', error)
+          useCallStore.getState().setStatus('failed')
+        }
+      }
+    }
+
+    processPendingOffer()
+  }, [pendingOffer, isIncoming, roomId])
 
   // Handle WebSocket messages
   useEffect(() => {

@@ -4,15 +4,13 @@
 
 import React from 'react'
 import { AppRouter } from './router'
-import { TelegramProvider, CallProvider } from './providers'
+import { TelegramProvider } from './providers'
 import './styles/index.css'
 
 export const App: React.FC = () => {
   return (
     <TelegramProvider>
-      <CallProvider>
-        <AppRouter />
-      </CallProvider>
+      <AppRouter />
     </TelegramProvider>
   )
 }

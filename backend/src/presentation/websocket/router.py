@@ -1,7 +1,10 @@
 """WebSocket router for signaling"""
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.websocket import ConnectionManager, SignalingHandler
 from ...core.logger import get_logger
+from ...core.dependencies import get_db_session
+from ...infrastructure.database.repositories import UserRepository
 
 logger = get_logger(__name__)
 
@@ -15,7 +18,8 @@ signaling = SignalingHandler(manager)
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    user_id: int = Query(..., gt=0, description="User ID for this connection")
+    user_id: int = Query(..., gt=0, description="User ID for this connection"),
+    db: AsyncSession = Depends(get_db_session)
 ):
     """
     WebSocket endpoint for WebRTC signaling
@@ -27,6 +31,14 @@ async def websocket_endpoint(
     - ice-candidate: ICE candidate exchange
     - leave-room: Leave a call room
     """
+    # Update user status to online in database
+    user_repo = UserRepository(db)
+    try:
+        await user_repo.update_online_status(user_id, True)
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Failed to set user {user_id} online: {e}")
+
     await manager.connect(websocket, user_id)
 
     try:
@@ -45,9 +57,21 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: user_id={user_id}")
         manager.disconnect(user_id)
+        # Update user status to offline
+        try:
+            await user_repo.update_online_status(user_id, False)
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Failed to set user {user_id} offline: {e}")
     except Exception as e:
         logger.error(f"WebSocket error for user {user_id}: {e}")
         manager.disconnect(user_id)
+        # Update user status to offline
+        try:
+            await user_repo.update_online_status(user_id, False)
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Failed to set user {user_id} offline: {e}")
         raise
 
 

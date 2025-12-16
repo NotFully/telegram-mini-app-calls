@@ -38,7 +38,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/rooms", tags=["Rooms"])
 
 
-@router.post("/", response_model=RoomResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=RoomResponse, status_code=status.HTTP_201_CREATED)
 async def create_room(
     request: CreateRoomRequest,
     use_case: CreateRoomUseCase = Depends(get_create_room_use_case),
@@ -73,7 +73,7 @@ async def create_room(
         )
 
 
-@router.get("/", response_model=RoomListResponse)
+@router.get("", response_model=RoomListResponse)
 async def list_active_rooms(
     use_case: ListActiveRoomsUseCase = Depends(get_list_active_rooms_use_case),
     session: AsyncSession = Depends(get_db_session)

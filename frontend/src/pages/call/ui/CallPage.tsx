@@ -2,19 +2,17 @@
  * Call Page - Active call page with video and controls
  */
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { VideoCallWidget } from '@/widgets/video-call'
 import { CallControlsWidget } from '@/widgets/call-controls'
 import { useCallStore } from '@/entities/call/model'
 import { wsClient } from '@/shared/api/websocket'
-import { PeerConnection } from '@/shared/lib/webrtc'
 import { formatDuration } from '@/shared/lib/utils'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
-  const [peerConnection] = useState<PeerConnection | null>(null)
-  const { status, duration, roomId, remoteUserId } = useCallStore()
+  const { status, duration, roomId, remoteUserId, peerConnection } = useCallStore()
   const durationIntervalRef = useRef<number>()
 
   // Handle WebSocket messages
@@ -28,7 +26,7 @@ export const CallPage: React.FC = () => {
             // Handle incoming offer
             await peerConnection.setRemoteDescription(message.sdp)
             const answer = await peerConnection.createAnswer()
-            await peerConnection.setRemoteDescription(answer)
+            await peerConnection.setLocalDescription(answer)
 
             wsClient.send({
               type: 'answer',

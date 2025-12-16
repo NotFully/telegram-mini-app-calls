@@ -3,6 +3,7 @@
  */
 
 import type { ICEServer } from '../../../shared/types'
+import type { PeerConnection } from '../../../shared/lib/webrtc'
 
 export type CallStatus =
   | 'idle'
@@ -18,6 +19,7 @@ export interface CallState {
   remoteUserId: number | null
   localStream: MediaStream | null
   remoteStream: MediaStream | null
+  peerConnection: PeerConnection | null
   isAudioEnabled: boolean
   isVideoEnabled: boolean
   isIncoming: boolean
@@ -32,6 +34,7 @@ export interface CallActions {
   setRemoteUserId: (userId: number | null) => void
   setLocalStream: (stream: MediaStream | null) => void
   setRemoteStream: (stream: MediaStream | null) => void
+  setPeerConnection: (peerConnection: PeerConnection | null) => void
   setAudioEnabled: (enabled: boolean) => void
   setVideoEnabled: (enabled: boolean) => void
   toggleAudio: () => void

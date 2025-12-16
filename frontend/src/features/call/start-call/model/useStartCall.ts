@@ -39,6 +39,7 @@ export function useStartCall() {
       const peerConnection = new PeerConnection(callStore.iceServers)
       peerConnection.create()
       peerConnection.addStream(localStream)
+      callStore.setPeerConnection(peerConnection)
 
       // Step 5: Set up ICE candidate handler
       peerConnection.onIceCandidate((candidate) => {

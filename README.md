@@ -51,41 +51,67 @@ frontend/src/
 
 ## Быстрый старт
 
-### Требования
-- **Docker** и **Docker Compose**
-- **Python 3.11+** (для локальной разработки)
-- **Node.js 20+** и **npm** (для локальной разработки)
+### Локальная разработка
 
-### Запуск через Docker (Рекомендуется)
+**Требования:**
+- Docker и Docker Compose
+- Python 3.11+ (опционально)
+- Node.js 20+ и npm (опционально)
 
 ```bash
 # Клонировать репозиторий
-git clone <repo-url>
+git clone https://github.com/NotFully/telegram-mini-app-calls.git
 cd telegram-mini-app-calls
 
 # Создать .env файл
 cp .env.example .env
-# Отредактировать .env с вашими настройками
+nano .env  # Отредактировать с вашими настройками
 
-# Запустить все сервисы через Makefile
+# Запустить все сервисы
 make dev
 
 # Или напрямую через docker-compose
 docker-compose up -d --build
-
-# Применить миграции базы данных
-make migrate
 
 # Посмотреть логи
 make logs
 ```
 
 **Доступ к сервисам:**
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:8000
-- **Backend API Docs**: http://localhost:8000/docs
-- **PostgreSQL**: localhost:5433 (внутри Docker: postgres:5432)
-- **Redis**: localhost:6379
+- Frontend: http://localhost
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- PostgreSQL: localhost:5433
+- Redis: localhost:6380
+
+📖 **Подробнее:** [QUICKSTART.md](QUICKSTART.md) | [LOCAL_TESTING.md](LOCAL_TESTING.md)
+
+### Production развертывание
+
+**Для развертывания на production сервере с Traefik 1.7:**
+
+```bash
+# На сервере
+git clone https://github.com/NotFully/telegram-mini-app-calls.git
+cd telegram-mini-app-calls
+
+# Быстрая инициализация
+./deploy.sh init
+
+# Настроить .env
+nano .env
+
+# Собрать и запустить
+./deploy.sh build
+./deploy.sh start
+```
+
+**Production домены:**
+- Frontend: https://app.notfully.ru
+- Backend: https://backend.notfully.ru
+- API Docs: https://backend.notfully.ru/docs
+
+📖 **Подробнее:** [DEPLOY_QUICKSTART.md](DEPLOY_QUICKSTART.md) | [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) | [SERVER_SETUP.md](SERVER_SETUP.md)
 
 ### Makefile команды
 

@@ -24,14 +24,12 @@
 # Traefik logs configuration
 ################################################################
 [traefikLog]
-  filePath = "/var/log/traefik/traefik.log"
   format = "json"
 
 ################################################################
 # Access logs configuration
 ################################################################
 [accessLog]
-  filePath = "/var/log/traefik/access.log"
   format = "json"
 
 ################################################################

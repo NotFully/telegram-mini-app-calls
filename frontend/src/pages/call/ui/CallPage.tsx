@@ -9,6 +9,8 @@ import { CallControlsWidget } from '@/widgets/call-controls'
 import { useCallStore } from '@/entities/call/model'
 import { wsClient } from '@/shared/api/websocket'
 import { formatDuration } from '@/shared/lib/utils'
+import { PeerConnection } from '@/shared/lib/webrtc'
+import { mediaStreamManager } from '@/shared/lib/webrtc/media-stream'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
@@ -18,14 +20,44 @@ export const CallPage: React.FC = () => {
   // Handle WebSocket messages
   useEffect(() => {
     const handleMessage = async (message: any) => {
-      if (!peerConnection) return
-
       try {
         switch (message.type) {
           case 'offer':
             // Handle incoming offer
-            await peerConnection.setRemoteDescription(message.sdp)
-            const answer = await peerConnection.createAnswer()
+            let pc = peerConnection
+
+            // If no peer connection exists, create one for incoming call
+            if (!pc) {
+              // Get user media
+              const localStream = await mediaStreamManager.getUserMedia()
+              useCallStore.getState().setLocalStream(localStream)
+
+              // Create peer connection
+              pc = new PeerConnection(useCallStore.getState().iceServers)
+              pc.create()
+              pc.addStream(localStream)
+              useCallStore.getState().setPeerConnection(pc)
+
+              // Set up ICE candidate handler
+              pc.onIceCandidate((candidate) => {
+                wsClient.send({
+                  type: 'ice-candidate',
+                  room_id: roomId ?? undefined,
+                  target_user_id: message.from_user_id,
+                  candidate: candidate.toJSON(),
+                })
+              })
+
+              // Set up remote track handler
+              pc.onTrack((event) => {
+                const [remoteStream] = event.streams
+                useCallStore.getState().setRemoteStream(remoteStream)
+                useCallStore.getState().setStatus('connected')
+              })
+            }
+
+            await pc.setRemoteDescription(message.sdp)
+            const answer = await pc.createAnswer()
 
             wsClient.send({
               type: 'answer',
@@ -37,12 +69,14 @@ export const CallPage: React.FC = () => {
 
           case 'answer':
             // Handle answer
-            await peerConnection.setRemoteDescription(message.sdp)
+            if (peerConnection) {
+              await peerConnection.setRemoteDescription(message.sdp)
+            }
             break
 
           case 'ice-candidate':
             // Handle ICE candidate
-            if (message.candidate) {
+            if (peerConnection && message.candidate) {
               await peerConnection.addIceCandidate(message.candidate)
             }
             break

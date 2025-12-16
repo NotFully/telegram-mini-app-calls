@@ -20,6 +20,9 @@
     address = ":443"
     [entryPoints.https.tls]
 
+  [entryPoints.api]
+    address = ":8080"
+
 ################################################################
 # Traefik logs configuration
 ################################################################
@@ -36,9 +39,8 @@
 # API and dashboard configuration
 ################################################################
 [api]
-  entryPoint = "traefik"
+  entryPoint = "api"
   dashboard = true
-  address = ":8080"
 
 ################################################################
 # Docker configuration backend

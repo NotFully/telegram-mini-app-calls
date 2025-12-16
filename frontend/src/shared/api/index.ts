@@ -38,7 +38,7 @@ export const usersApi = {
 // Rooms API
 export const roomsApi = {
   createRoom: (creator_id: number) =>
-    httpClient.post<{ room_id: string }>(API_ENDPOINTS.rooms.create, {
+    httpClient.post<Room>(API_ENDPOINTS.rooms.create, {
       creator_id,
     }),
 

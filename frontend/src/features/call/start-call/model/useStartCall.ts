@@ -23,12 +23,13 @@ export function useStartCall() {
       setError(null)
 
       // Step 1: Create room
-      const { room_id } = await roomsApi.createRoom(creatorId)
+      const room = await roomsApi.createRoom(creatorId)
+      const room_id = String(room.id)
 
       // Step 2: Join WebSocket room
       wsClient.send({
         type: 'join-room',
-        room_id,
+        room_id: room_id,
       })
 
       // Step 3: Get user media

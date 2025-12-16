@@ -21,7 +21,7 @@ export interface Room {
   is_active: boolean
   created_at: string
   closed_at?: string
-  participants: RoomParticipant[]
+  participants: number[]
 }
 
 export interface RoomParticipant {

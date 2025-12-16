@@ -14,8 +14,9 @@ const ProtectedCallRoute: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const status = useCallStore((state) => state.status)
 
-  // Redirect to home if not in a call
-  if (status === 'idle') {
+  // Allow access if status is connecting, ringing, or connected
+  // Only redirect if status is idle, ended, or failed
+  if (status === 'idle' || status === 'ended' || status === 'failed') {
     return <Navigate to="/" replace />
   }
 

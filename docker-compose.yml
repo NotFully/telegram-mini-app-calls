@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://telegram_calls:telegram_calls_pass@postgres:5432/telegram_calls
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-secret-key-change-in-production-min-32-chars-long
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-your_telegram_bot_token}
+      - TURN_URLS=["turn:${SERVER_IP:-localhost}:3478"]
+      - STUN_URLS=["stun:stun.l.google.com:19302"]
+      - TURN_USERNAME=telegram_calls
+      - TURN_PASSWORD=telegram_calls_turn
+      - DEBUG=true
+    volumes:
+      - ./backend:/app
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - telegram_calls_network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=telegram_calls
+      - POSTGRES_PASSWORD=telegram_calls_pass
+      - POSTGRES_DB=telegram_calls
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - telegram_calls_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U telegram_calls"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - telegram_calls_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  coturn:
+    image: coturn/coturn:latest
+    network_mode: host
+    volumes:
+      - ./docker/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  telegram_calls_network:
+    driver: bridge

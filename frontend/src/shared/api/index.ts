@@ -21,8 +21,18 @@ export const authApi = {
 // Users API
 export const usersApi = {
   getMe: () => httpClient.get<User>(API_ENDPOINTS.users.me),
-  listUsers: () => httpClient.get<User[]>(API_ENDPOINTS.users.list),
-  listOnlineUsers: () => httpClient.get<User[]>(API_ENDPOINTS.users.online),
+  listUsers: async () => {
+    const response = await httpClient.get<{ users: User[]; total: number }>(
+      API_ENDPOINTS.users.list
+    )
+    return response.users
+  },
+  listOnlineUsers: async () => {
+    const response = await httpClient.get<{ users: User[]; total: number }>(
+      API_ENDPOINTS.users.online
+    )
+    return response.users
+  },
 }
 
 // Rooms API
@@ -32,7 +42,12 @@ export const roomsApi = {
       creator_id,
     }),
 
-  listRooms: () => httpClient.get<Room[]>(API_ENDPOINTS.rooms.list),
+  listRooms: async () => {
+    const response = await httpClient.get<{ rooms: Room[]; total: number }>(
+      API_ENDPOINTS.rooms.list
+    )
+    return response.rooms
+  },
 
   getRoom: (roomId: string) =>
     httpClient.get<Room>(API_ENDPOINTS.rooms.get(roomId)),

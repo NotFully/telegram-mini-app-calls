@@ -124,6 +124,6 @@ export function isWebRTCSupported(): boolean {
   return !!(
     navigator.mediaDevices &&
     navigator.mediaDevices.getUserMedia &&
-    window.RTCPeerConnection
+    typeof RTCPeerConnection !== 'undefined'
   )
 }

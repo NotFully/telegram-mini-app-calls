@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand'
-import type { UserStore, User } from './types'
+import type { UserStore } from './types'
 
 const initialState = {
   currentUser: null,

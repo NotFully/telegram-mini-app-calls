@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand'
-import type { RoomStore, Room, RoomParticipant } from './types'
+import type { RoomStore, RoomParticipant } from './types'
 
 const initialState = {
   currentRoom: null,
@@ -42,7 +42,7 @@ export const useRoomStore = create<RoomStore>((set) => ({
         state.currentRoom?.id === roomId ? null : state.currentRoom,
     })),
 
-  addParticipant: (roomId, participant) =>
+  addParticipant: (roomId, participant: RoomParticipant) =>
     set((state) => ({
       rooms: state.rooms.map((room) =>
         room.id === roomId

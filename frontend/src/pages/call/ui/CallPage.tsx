@@ -13,11 +13,9 @@ import { formatDuration } from '@/shared/lib/utils'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
-  const [peerConnection, setPeerConnection] = useState<PeerConnection | null>(
-    null
-  )
+  const [peerConnection] = useState<PeerConnection | null>(null)
   const { status, duration, roomId, remoteUserId } = useCallStore()
-  const durationIntervalRef = useRef<NodeJS.Timeout>()
+  const durationIntervalRef = useRef<number>()
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -34,7 +32,7 @@ export const CallPage: React.FC = () => {
 
             wsClient.send({
               type: 'answer',
-              room_id: roomId,
+              room_id: roomId ?? undefined,
               target_user_id: message.from_user_id,
               sdp: answer,
             })
@@ -72,7 +70,7 @@ export const CallPage: React.FC = () => {
   // Handle call duration
   useEffect(() => {
     if (status === 'connected') {
-      durationIntervalRef.current = setInterval(() => {
+      durationIntervalRef.current = window.setInterval(() => {
         useCallStore.getState().incrementDuration()
       }, 1000)
     } else {

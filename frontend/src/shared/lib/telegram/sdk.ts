@@ -119,7 +119,7 @@ class TelegramSDK {
    * Get user data from Telegram
    */
   getUserData(): TelegramAuthData | null {
-    if (!this.webApp?.initDataUnsafe.user) {
+    if (!this.webApp?.initDataUnsafe?.user) {
       return null
     }
 

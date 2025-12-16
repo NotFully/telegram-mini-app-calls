@@ -56,7 +56,7 @@ frontend/src/
 - **Python 3.11+** (для локальной разработки)
 - **Node.js 20+** и **npm** (для локальной разработки)
 
-### Запуск через Docker
+### Запуск через Docker (Рекомендуется)
 
 ```bash
 # Клонировать репозиторий
@@ -67,12 +67,45 @@ cd telegram-mini-app-calls
 cp .env.example .env
 # Отредактировать .env с вашими настройками
 
-# Запустить все сервисы
+# Запустить все сервисы через Makefile
+make dev
+
+# Или напрямую через docker-compose
 docker-compose up -d --build
 
-# Frontend: http://localhost:80
-# Backend API: http://localhost:8000
-# Backend API Docs: http://localhost:8000/docs
+# Применить миграции базы данных
+make migrate
+
+# Посмотреть логи
+make logs
+```
+
+**Доступ к сервисам:**
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:8000
+- **Backend API Docs**: http://localhost:8000/docs
+- **PostgreSQL**: localhost:5432
+- **Redis**: localhost:6379
+
+### Makefile команды
+
+```bash
+make help          # Показать все доступные команды
+make install       # Установить зависимости (frontend + backend)
+make build         # Собрать Docker контейнеры
+make up            # Запустить все сервисы
+make down          # Остановить все сервисы
+make logs          # Просмотр логов всех сервисов
+make logs-backend  # Просмотр логов backend
+make logs-frontend # Просмотр логов frontend
+make migrate       # Применить миграции БД
+make migration     # Создать новую миграцию
+make shell         # Открыть shell в backend контейнере
+make shell-db      # Открыть psql в PostgreSQL
+make test          # Запустить тесты
+make clean         # Удалить контейнеры и volumes
+make dev           # Build + Up + показать инструкции
+make restart       # Перезапустить backend и frontend
 ```
 
 ### Локальная разработка

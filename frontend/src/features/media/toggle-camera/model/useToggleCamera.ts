@@ -4,9 +4,10 @@
 
 import { useCallStore } from '@/entities/call/model'
 import { mediaStreamManager } from '@/shared/lib/webrtc/media-stream'
+import { wsClient } from '@/shared/api/websocket'
 
 export function useToggleCamera() {
-  const { isVideoEnabled, setVideoEnabled, peerConnection, localStream, setLocalStream } = useCallStore()
+  const { isVideoEnabled, setVideoEnabled, peerConnection, localStream, setLocalStream, roomId, remoteUserId } = useCallStore()
 
   const toggleCamera = async () => {
     try {
@@ -50,9 +51,25 @@ export function useToggleCamera() {
                 console.log('[useToggleCamera] Replacing video track')
                 await videoSender.replaceTrack(videoTrack)
               } else {
-                // Add new video track
+                // Add new video track - requires renegotiation
                 console.log('[useToggleCamera] Adding video track to peer connection')
                 peerConnection.connection.addTrack(videoTrack, updatedStream)
+
+                // Renegotiate to send new offer with video track
+                console.log('[useToggleCamera] Creating new offer for renegotiation')
+                const offer = await peerConnection.createOffer()
+
+                // Send new offer to remote peer
+                if (roomId && remoteUserId) {
+                  wsClient.send({
+                    type: 'offer',
+                    room_id: roomId,
+                    target_user_id: remoteUserId,
+                    sdp: offer,
+                    video_enabled: true,
+                  })
+                  console.log('[useToggleCamera] Renegotiation offer sent')
+                }
               }
             }
           }

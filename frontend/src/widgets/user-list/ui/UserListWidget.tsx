@@ -123,10 +123,7 @@ export const UserListWidget: React.FC = () => {
                 </div>
               </div>
 
-              <StartCallButton
-                targetUserId={user.id}
-                targetUserName={getUserDisplayName(user)}
-              />
+              <StartCallButton targetUserId={user.id} />
             </div>
           ))}
         </div>

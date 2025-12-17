@@ -6,6 +6,7 @@ import React, { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { VideoCallWidget } from '@/widgets/video-call'
 import { CallControlsWidget } from '@/widgets/call-controls'
+import { IncomingCallWidget } from '@/widgets/incoming-call'
 import { useCallStore } from '@/entities/call/model'
 import { wsClient } from '@/shared/api/websocket'
 import { formatDuration } from '@/shared/lib/utils'
@@ -18,21 +19,44 @@ export const CallPage: React.FC = () => {
   const durationIntervalRef = useRef<number>()
   const hasProcessedOffer = useRef(false)
 
-  // Join room for incoming calls
+  // Handle accepting incoming call
+  const handleAcceptCall = async () => {
+    console.log('[CallPage] Call accepted by user')
+    useCallStore.getState().setStatus('connecting')
+  }
+
+  // Handle rejecting incoming call
+  const handleRejectCall = () => {
+    console.log('[CallPage] Call rejected by user')
+
+    // Send call-rejected message to caller
+    if (remoteUserId) {
+      wsClient.send({
+        type: 'call-rejected',
+        target_user_id: remoteUserId,
+      })
+    }
+
+    // Reset call state and go home
+    useCallStore.getState().reset()
+    navigate('/')
+  }
+
+  // Join room for incoming calls (when call is accepted)
   useEffect(() => {
-    if (isIncoming && roomId) {
+    if (isIncoming && roomId && status === 'connecting') {
       console.log('[CallPage] Joining room for incoming call:', roomId)
       wsClient.send({
         type: 'join-room',
         room_id: roomId,
       })
     }
-  }, [isIncoming, roomId])
+  }, [isIncoming, roomId, status])
 
-  // Process pending offer for incoming calls
+  // Process pending offer for incoming calls (when call is accepted)
   useEffect(() => {
     const processPendingOffer = async () => {
-      if (pendingOffer && isIncoming && !hasProcessedOffer.current) {
+      if (pendingOffer && isIncoming && status === 'connecting' && !hasProcessedOffer.current) {
         hasProcessedOffer.current = true
         console.log('[CallPage] Processing pending offer from user', pendingOffer.from_user_id)
 
@@ -93,74 +117,65 @@ export const CallPage: React.FC = () => {
     }
 
     processPendingOffer()
-  }, [pendingOffer, isIncoming, roomId])
+  }, [pendingOffer, isIncoming, roomId, status])
 
   // Handle WebSocket messages
   useEffect(() => {
     const handleMessage = async (message: any) => {
       try {
         switch (message.type) {
-          case 'offer':
-            // Handle incoming offer
-            let pc = peerConnection
-
-            // If no peer connection exists, create one for incoming call
-            if (!pc) {
-              // Get user media
-              const localStream = await mediaStreamManager.getUserMedia()
-              useCallStore.getState().setLocalStream(localStream)
-
-              // Create peer connection
-              pc = new PeerConnection(useCallStore.getState().iceServers)
-              pc.create()
-              pc.addStream(localStream)
-              useCallStore.getState().setPeerConnection(pc)
-
-              // Set up ICE candidate handler
-              pc.onIceCandidate((candidate) => {
-                wsClient.send({
-                  type: 'ice-candidate',
-                  room_id: roomId ?? undefined,
-                  target_user_id: message.from_user_id,
-                  candidate: candidate.toJSON(),
-                })
-              })
-
-              // Set up remote track handler
-              pc.onTrack((event) => {
-                const [remoteStream] = event.streams
-                useCallStore.getState().setRemoteStream(remoteStream)
-                useCallStore.getState().setStatus('connected')
-              })
-            }
-
-            await pc.setRemoteDescription(message.sdp)
-            const answer = await pc.createAnswer()
-
-            wsClient.send({
-              type: 'answer',
-              room_id: roomId ?? undefined,
-              target_user_id: message.from_user_id,
-              sdp: answer,
-            })
+          case 'call-rejected':
+            // Other user rejected the call
+            console.log('[CallPage] Call was rejected by other user')
+            useCallStore.getState().setError('Звонок отклонен')
+            useCallStore.getState().setStatus('failed')
+            setTimeout(() => {
+              navigate('/')
+            }, 2000)
             break
 
           case 'answer':
             // Handle answer
+            console.log('[CallPage] Received answer from user', message.from_user_id)
             if (peerConnection) {
+              console.log('[CallPage] Setting remote description from answer')
               await peerConnection.setRemoteDescription(message.sdp)
+              console.log('[CallPage] Remote description set successfully')
+            } else {
+              console.error('[CallPage] No peer connection available to set answer')
             }
             break
 
           case 'ice-candidate':
             // Handle ICE candidate
+            console.log('[CallPage] Received ICE candidate from user', message.from_user_id)
             if (peerConnection && message.candidate) {
               await peerConnection.addIceCandidate(message.candidate)
+              console.log('[CallPage] ICE candidate added successfully')
+            } else if (!peerConnection) {
+              console.error('[CallPage] No peer connection available to add ICE candidate')
             }
             break
 
           case 'user-left':
             // Other user left, end call
+            console.log('[CallPage] Other user left the call')
+
+            // Clean up peer connection
+            if (peerConnection) {
+              peerConnection.connection?.close()
+            }
+
+            // Stop local media streams
+            const localStream = useCallStore.getState().localStream
+            if (localStream) {
+              localStream.getTracks().forEach(track => track.stop())
+            }
+
+            // Reset call state
+            useCallStore.getState().reset()
+
+            // Navigate home
             navigate('/')
             break
         }
@@ -205,6 +220,38 @@ export const CallPage: React.FC = () => {
       return () => clearTimeout(timeout)
     }
   }, [status, navigate])
+
+  // Show incoming call screen for ringing status
+  if (status === 'ringing' && isIncoming) {
+    return (
+      <IncomingCallWidget
+        onAccept={handleAcceptCall}
+        onReject={handleRejectCall}
+      />
+    )
+  }
+
+  // Show error message if call failed
+  if (status === 'failed') {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          backgroundColor: '#1a1a1a',
+          color: 'white',
+          padding: '20px',
+        }}
+      >
+        <div style={{ fontSize: '24px', marginBottom: '20px' }}>
+          {useCallStore.getState().error || 'Звонок завершен'}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100vh' }}>

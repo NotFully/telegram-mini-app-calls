@@ -24,11 +24,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           console.log('[CallProvider] Incoming call from user', from_user_id, 'room', room_id)
           console.log('[CallProvider] SDP offer received:', sdp ? 'YES' : 'NO')
 
-          // Set call state to incoming
+          // Set call state to incoming (ringing)
           useCallStore.getState().setRemoteUserId(from_user_id)
           useCallStore.getState().setRoomId(room_id || null)
           useCallStore.getState().setIsIncoming(true)
-          useCallStore.getState().setStatus('connecting')
+          useCallStore.getState().setStatus('ringing')
           useCallStore.getState().setPendingOffer(message)
 
           console.log('[CallProvider] Navigating to /call')

@@ -38,6 +38,7 @@ class SignalingHandler:
             "answer": self._handle_answer,
             "ice-candidate": self._handle_ice_candidate,
             "leave-room": self._handle_leave_room,
+            "call-rejected": self._handle_call_rejected,
         }
 
         handler = handlers.get(msg_type)
@@ -186,3 +187,21 @@ class SignalingHandler:
         )
 
         logger.info(f"User {user_id} left room {room_id}")
+
+    async def _handle_call_rejected(self, message: Dict, user_id: int):
+        """Handle call rejection"""
+        target_user_id = message.get("target_user_id")
+
+        if not target_user_id:
+            logger.warning(f"Missing target_user_id in call-rejected from user {user_id}")
+            return
+
+        await self.manager.send_personal_message(
+            {
+                "type": "call-rejected",
+                "from_user_id": user_id,
+            },
+            target_user_id
+        )
+
+        logger.info(f"User {user_id} rejected call from user {target_user_id}")

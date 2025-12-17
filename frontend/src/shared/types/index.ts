@@ -74,6 +74,7 @@ export interface WebSocketMessage {
   user_id?: number
   sdp?: RTCSessionDescriptionInit
   candidate?: RTCIceCandidateInit
+  video_enabled?: boolean
 }
 
 // API Response types

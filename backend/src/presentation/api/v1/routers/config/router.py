@@ -1,7 +1,7 @@
 """Config router - returns application configuration"""
 from fastapi import APIRouter
 from .schemas import ConfigResponse
-from .....core.config import settings
+from ......core.config import settings
 
 router = APIRouter(prefix="/config", tags=["config"])
 

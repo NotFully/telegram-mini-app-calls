@@ -143,6 +143,50 @@ export const CallPage: React.FC = () => {
     const handleMessage = async (message: any) => {
       try {
         switch (message.type) {
+          case 'offer':
+            // Handle renegotiation offer (e.g., when remote peer adds video)
+            console.log('[CallPage] Received renegotiation offer from user', message.from_user_id)
+            if (peerConnection && message.sdp) {
+              console.log('[CallPage] Setting remote description from renegotiation offer')
+              await peerConnection.setRemoteDescription(message.sdp)
+
+              // Check if remote peer enabled video - if so, enable ours too
+              if (message.video_enabled && !useCallStore.getState().isVideoEnabled) {
+                console.log('[CallPage] Remote peer enabled video, enabling local video too')
+                try {
+                  const currentLocalStream = useCallStore.getState().localStream
+                  const existingVideoTrack = currentLocalStream?.getVideoTracks()[0]
+
+                  if (!existingVideoTrack) {
+                    // Add video track
+                    const updatedStream = await mediaStreamManager.enableVideo()
+                    useCallStore.getState().setLocalStream(updatedStream)
+                    useCallStore.getState().setVideoEnabled(true)
+
+                    // Add video track to peer connection
+                    const videoTrack = updatedStream.getVideoTracks()[0]
+                    if (videoTrack) {
+                      peerConnection.connection.addTrack(videoTrack, updatedStream)
+                      console.log('[CallPage] Video track added to peer connection')
+                    }
+                  }
+                } catch (error) {
+                  console.error('[CallPage] Error enabling video during renegotiation:', error)
+                }
+              }
+
+              // Create and send answer
+              const answer = await peerConnection.createAnswer()
+              console.log('[CallPage] Sending answer for renegotiation')
+              wsClient.send({
+                type: 'answer',
+                room_id: roomId ?? undefined,
+                target_user_id: message.from_user_id,
+                sdp: answer,
+              })
+            }
+            break
+
           case 'call-rejected':
             // Other user rejected the call
             console.log('[CallPage] Call was rejected by other user')

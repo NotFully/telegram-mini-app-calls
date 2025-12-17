@@ -9,13 +9,11 @@ import { useUserStore } from '@/entities/user/model'
 
 interface StartCallButtonProps {
   targetUserId: number
-  targetUserName: string
   className?: string
 }
 
 export const StartCallButton: React.FC<StartCallButtonProps> = ({
   targetUserId,
-  targetUserName,
   className = '',
 }) => {
   const navigate = useNavigate()

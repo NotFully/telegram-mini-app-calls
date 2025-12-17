@@ -102,5 +102,4 @@ async def get_leave_room_use_case(
 ) -> AsyncGenerator[LeaveRoomUseCase, None]:
     """Get LeaveRoom use case instance"""
     room_repo = RoomRepositoryImpl(session)
-    user_repo = UserRepositoryImpl(session)
-    yield LeaveRoomUseCase(room_repo, user_repo)
+    yield LeaveRoomUseCase(room_repo)

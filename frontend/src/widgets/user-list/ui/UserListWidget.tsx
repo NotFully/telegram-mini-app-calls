@@ -6,7 +6,6 @@ import React, { useEffect } from 'react'
 import { useUserStore } from '@/entities/user/model'
 import { usersApi } from '@/shared/api'
 import { StartCallButton } from '@/features/call/start-call'
-import { getUserDisplayName } from '@/shared/lib/utils'
 
 export const UserListWidget: React.FC = () => {
   const { onlineUsers, currentUser, setOnlineUsers, setLoading, setError } =

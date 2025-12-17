@@ -64,6 +64,7 @@ export type WebSocketMessageType =
   | 'ice-candidate'
   | 'user-joined'
   | 'user-left'
+  | 'call-rejected'
 
 export interface WebSocketMessage {
   type: WebSocketMessageType

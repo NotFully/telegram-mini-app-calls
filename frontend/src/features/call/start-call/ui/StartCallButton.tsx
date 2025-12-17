@@ -22,14 +22,14 @@ export const StartCallButton: React.FC<StartCallButtonProps> = ({
   const { startCall, isLoading } = useStartCall()
   const currentUser = useUserStore((state) => state.currentUser)
 
-  const handleStartCall = async () => {
+  const handleStartCall = async (videoEnabled: boolean) => {
     if (!currentUser) {
       console.error('Current user not found')
       return
     }
 
     try {
-      await startCall(targetUserId, currentUser.id)
+      await startCall(targetUserId, currentUser.id, videoEnabled)
       // Navigate to call page after starting call
       navigate('/call')
     } catch (error) {
@@ -38,21 +38,55 @@ export const StartCallButton: React.FC<StartCallButtonProps> = ({
   }
 
   return (
-    <button
-      onClick={handleStartCall}
-      disabled={isLoading}
-      className={`start-call-button ${className}`}
+    <div
       style={{
-        padding: '10px 20px',
-        backgroundColor: isLoading ? '#ccc' : '#4CAF50',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: isLoading ? 'not-allowed' : 'pointer',
-        fontSize: '16px',
+        display: 'flex',
+        gap: '10px',
+        alignItems: 'center',
       }}
+      className={className}
     >
-      {isLoading ? 'Starting...' : `Call ${targetUserName}`}
-    </button>
+      {/* Audio call button */}
+      <button
+        onClick={() => handleStartCall(false)}
+        disabled={isLoading}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: isLoading ? '#ccc' : '#2196F3',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>🎤</span>
+        {isLoading ? 'Starting...' : 'Audio'}
+      </button>
+
+      {/* Video call button */}
+      <button
+        onClick={() => handleStartCall(true)}
+        disabled={isLoading}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: isLoading ? '#ccc' : '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>📹</span>
+        {isLoading ? 'Starting...' : 'Video'}
+      </button>
+    </div>
   )
 }

@@ -17,10 +17,12 @@ export function useStartCall() {
   const callStore = useCallStore()
   const roomStore = useRoomStore()
 
-  const startCall = async (targetUserId: number, creatorId: number) => {
+  const startCall = async (targetUserId: number, creatorId: number, videoEnabled: boolean = true) => {
     try {
       setIsLoading(true)
       setError(null)
+
+      console.log(`[useStartCall] Starting call with video: ${videoEnabled}`)
 
       // Step 1: Create room
       const room = await roomsApi.createRoom(creatorId)
@@ -32,9 +34,13 @@ export function useStartCall() {
         room_id: room_id,
       })
 
-      // Step 3: Get user media
-      const localStream = await mediaStreamManager.getUserMedia()
+      // Step 3: Get user media (audio always, video optional)
+      const localStream = await mediaStreamManager.getUserMedia({
+        audio: true,
+        video: videoEnabled,
+      })
       callStore.setLocalStream(localStream)
+      callStore.setVideoEnabled(videoEnabled)
 
       // Step 4: Create peer connection
       const peerConnection = new PeerConnection(callStore.iceServers)

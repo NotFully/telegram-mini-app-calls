@@ -10,6 +10,7 @@ import type {
   User,
   Room,
   ApiResponse,
+  ICEServer,
 } from '../types'
 
 // Auth API
@@ -62,6 +63,16 @@ export const roomsApi = {
       API_ENDPOINTS.rooms.leave(roomId),
       { user_id: userId }
     ),
+}
+
+// Config API
+export const configApi = {
+  getConfig: async () => {
+    const response = await httpClient.get<{ ice_servers: ICEServer[] }>(
+      API_ENDPOINTS.config
+    )
+    return response.ice_servers
+  },
 }
 
 export * from './http'

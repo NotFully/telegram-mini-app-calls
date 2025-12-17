@@ -25,5 +25,6 @@ export const API_ENDPOINTS = {
     join: (id: string) => `${config.apiV1Prefix}/rooms/${id}/join`,
     leave: (id: string) => `${config.apiV1Prefix}/rooms/${id}/leave`,
   },
+  config: `${config.apiV1Prefix}/config`,
   websocket: `${config.wsUrl}/ws`,
 } as const

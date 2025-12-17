@@ -1,4 +1,4 @@
 """API routers"""
-from . import auth, user, room
+from . import auth, user, room, config
 
-__all__ = ["auth", "user", "room"]
+__all__ = ["auth", "user", "room", "config"]

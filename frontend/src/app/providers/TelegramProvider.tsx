@@ -4,8 +4,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { telegramSDK } from '@/shared/lib/telegram'
-import { authApi, wsClient } from '@/shared/api'
+import { authApi, wsClient, configApi } from '@/shared/api'
 import { useUserStore } from '@/entities/user/model'
+import { useCallStore } from '@/entities/call/model'
 
 interface TelegramProviderProps {
   children: React.ReactNode
@@ -17,10 +18,17 @@ export const TelegramProvider: React.FC<TelegramProviderProps> = ({
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { setCurrentUser, setError: setUserError } = useUserStore()
+  const { setIceServers } = useCallStore()
 
   useEffect(() => {
     const initializeTelegram = async () => {
       try {
+        // Load ICE servers from backend
+        console.log('[TelegramProvider] Loading ICE servers from backend')
+        const iceServers = await configApi.getConfig()
+        console.log('[TelegramProvider] ICE servers loaded:', iceServers)
+        setIceServers(iceServers)
+
         // Initialize Telegram SDK
         telegramSDK.init()
 
@@ -78,7 +86,7 @@ export const TelegramProvider: React.FC<TelegramProviderProps> = ({
     return () => {
       wsClient.disconnect()
     }
-  }, [setCurrentUser, setUserError])
+  }, [setCurrentUser, setUserError, setIceServers])
 
   if (error) {
     return (

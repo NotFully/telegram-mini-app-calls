@@ -15,7 +15,7 @@ import { mediaStreamManager } from '@/shared/lib/webrtc/media-stream'
 
 export const CallPage: React.FC = () => {
   const navigate = useNavigate()
-  const { status, duration, roomId, remoteUserId, peerConnection, isIncoming, pendingOffer } = useCallStore()
+  const { status, duration, roomId, remoteUserId, peerConnection, isIncoming, pendingOffer, pendingIceCandidates } = useCallStore()
   const durationIntervalRef = useRef<number>()
   const hasProcessedOffer = useRef(false)
 
@@ -36,6 +36,9 @@ export const CallPage: React.FC = () => {
         target_user_id: remoteUserId,
       })
     }
+
+    // Clear pending ICE candidates
+    useCallStore.getState().clearPendingIceCandidates()
 
     // Reset call state and go home
     useCallStore.getState().reset()
@@ -113,6 +116,17 @@ export const CallPage: React.FC = () => {
 
           // Clear pending offer
           useCallStore.getState().setPendingOffer(null)
+          // Apply pending ICE candidates
+          console.log(`[CallPage] Applying ${pendingIceCandidates.length} pending ICE candidates`)
+          for (const candidate of pendingIceCandidates) {
+            try {
+              await pc.addIceCandidate(candidate)
+              console.log('[CallPage] Pending ICE candidate applied')
+            } catch (err) {
+              console.error('[CallPage] Error adding pending ICE candidate:', err)
+            }
+          }
+          useCallStore.getState().clearPendingIceCandidates()
         } catch (error) {
           console.error('[CallPage] Error processing pending offer:', error)
           useCallStore.getState().setStatus('failed')
@@ -121,7 +135,7 @@ export const CallPage: React.FC = () => {
     }
 
     processPendingOffer()
-  }, [pendingOffer, isIncoming, roomId, status])
+  }, [pendingOffer, isIncoming, roomId, status, pendingIceCandidates])
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -156,8 +170,11 @@ export const CallPage: React.FC = () => {
             if (peerConnection && message.candidate) {
               await peerConnection.addIceCandidate(message.candidate)
               console.log('[CallPage] ICE candidate added successfully')
-            } else if (!peerConnection) {
-              console.error('[CallPage] No peer connection available to add ICE candidate')
+            } else if (!peerConnection && message.candidate) {
+              // Peer connection not ready yet, save candidate for later
+              console.log('[CallPage] Peer connection not ready, saving ICE candidate to queue')
+              useCallStore.getState().addPendingIceCandidate(message.candidate)
+              console.log('[CallPage] Pending ICE candidates:', useCallStore.getState().pendingIceCandidates.length)
             }
             break
 

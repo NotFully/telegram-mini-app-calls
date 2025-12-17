@@ -21,6 +21,7 @@ export interface CallState {
   remoteStream: MediaStream | null
   peerConnection: PeerConnection | null
   pendingOffer: any | null
+  pendingIceCandidates: any[]
   isAudioEnabled: boolean
   isVideoEnabled: boolean
   isIncoming: boolean
@@ -37,6 +38,8 @@ export interface CallActions {
   setRemoteStream: (stream: MediaStream | null) => void
   setPeerConnection: (peerConnection: PeerConnection | null) => void
   setPendingOffer: (offer: any | null) => void
+  addPendingIceCandidate: (candidate: any) => void
+  clearPendingIceCandidates: () => void
   setAudioEnabled: (enabled: boolean) => void
   setVideoEnabled: (enabled: boolean) => void
   toggleAudio: () => void

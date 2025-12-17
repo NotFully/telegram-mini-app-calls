@@ -13,6 +13,7 @@ const initialState = {
   remoteStream: null,
   peerConnection: null,
   pendingOffer: null,
+  pendingIceCandidates: [],
   isAudioEnabled: true,
   isVideoEnabled: true,
   isIncoming: false,
@@ -37,6 +38,13 @@ export const useCallStore = create<CallStore>((set) => ({
   setPeerConnection: (peerConnection) => set({ peerConnection }),
 
   setPendingOffer: (offer) => set({ pendingOffer: offer }),
+
+  addPendingIceCandidate: (candidate) =>
+    set((state) => ({
+      pendingIceCandidates: [...state.pendingIceCandidates, candidate],
+    })),
+
+  clearPendingIceCandidates: () => set({ pendingIceCandidates: [] }),
 
   setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
 

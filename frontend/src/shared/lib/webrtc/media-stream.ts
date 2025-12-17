@@ -119,6 +119,55 @@ export class MediaStreamManager {
   }
 
   /**
+   * Enable video track (add camera if not present)
+   */
+  async enableVideo(): Promise<MediaStream> {
+    if (!this.localStream) {
+      throw new Error('No local stream available')
+    }
+
+    // Check if video track already exists
+    const existingVideoTrack = this.localStream.getVideoTracks()[0]
+    if (existingVideoTrack) {
+      existingVideoTrack.enabled = true
+      return this.localStream
+    }
+
+    // No video track, need to add one
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user',
+        },
+        audio: false,
+      })
+
+      const newVideoTrack = newStream.getVideoTracks()[0]
+      this.localStream.addTrack(newVideoTrack)
+
+      return this.localStream
+    } catch (error) {
+      console.error('Error enabling video:', error)
+      throw new Error('Failed to enable video')
+    }
+  }
+
+  /**
+   * Disable video track (stop camera)
+   */
+  disableVideo() {
+    if (!this.localStream) return
+
+    const videoTrack = this.localStream.getVideoTracks()[0]
+    if (videoTrack) {
+      videoTrack.stop()
+      this.localStream.removeTrack(videoTrack)
+    }
+  }
+
+  /**
    * Switch camera (front/back)
    */
   async switchCamera() {

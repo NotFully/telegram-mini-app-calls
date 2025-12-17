@@ -72,6 +72,7 @@ export function useStartCall() {
         room_id,
         target_user_id: targetUserId,
         sdp: offer,
+        video_enabled: videoEnabled,
       })
 
       // Update stores

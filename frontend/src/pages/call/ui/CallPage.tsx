@@ -64,15 +64,16 @@ export const CallPage: React.FC = () => {
         console.log('[CallPage] Processing pending offer from user', pendingOffer.from_user_id)
 
         try {
-          // Get user media (for incoming calls, start with audio only)
-          console.log('[CallPage] Requesting user media (audio only for incoming call)')
+          // Get user media - match the caller's video setting
+          const videoEnabled = pendingOffer.video_enabled ?? false
+          console.log(`[CallPage] Requesting user media (video: ${videoEnabled}) for incoming call`)
           const localStream = await mediaStreamManager.getUserMedia({
             audio: true,
-            video: false,
+            video: videoEnabled,
           })
           useCallStore.getState().setLocalStream(localStream)
-          useCallStore.getState().setVideoEnabled(false)
-          console.log('[CallPage] Local stream obtained (audio only)')
+          useCallStore.getState().setVideoEnabled(videoEnabled)
+          console.log(`[CallPage] Local stream obtained (video: ${videoEnabled})`)
 
           // Create peer connection
           console.log('[CallPage] Creating peer connection')
